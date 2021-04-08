@@ -10,35 +10,62 @@ clc
 clear
 close all
 %% Importation des paramètres environnemnentaux
-donnesBrutes = readtable('Analyse-de-données-météo-Montréal-McTavish.xlsx');
+load('DonneesMeteo.mat');
 
-%% Moyenne des temperatures horaires par mois
+%% Moyenne des données météo horaires par mois
 % Création d'un ensemble de cellules pour les données moyennées par heure
-meteo = {};
+param = {}; %(par colonne : Mois, tempMoy, ventMoy, RhMoy, irrMoy, pvMoy, eolMoy)
+joursMois = [31 28 31 30 31 30 31 31 30 31 30 31];
+nomsMois = {'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'};
+
 for i = 1:12
     % Prise en compte des heures écoulées dans l'année
     if i == 1
         lignesAccu(i) = 0;
     else
-        lignesAccu(i) =  24*str2num(cell2mat(table2array(donnesBrutes(3,i+3))))+lignesAccu(i-1);
+        lignesAccu(i) =  lignesAccu(i-1)+24*joursMois(i-1);
     end
     % Attribution des noms des mois aux cellules de la première colonne
-    meteo{i,1}= table2array(donnesBrutes(2,i+4));
+    param{i,1}= nomsMois(i);
     
     % Sélection des données du tableau original selon l'heure du jour et le
     % mois
     tempMoy = [];
-    for j = 1:24
+    ventMoy = [];
+    RHMoy = [];
+    irrMoy = [];
+    for j = 1:24 %Indexation pour les heures de la journée
             n = 1;
-        for k = lignesAccu(i)+1:24:lignesAccu(i)+str2num(cell2mat(table2array(donnesBrutes(3,i+4))))*24
-            tempMoy(j,n) = str2num(cell2mat(table2array(donnesBrutes(1+j+k,2))));
+            %Indexation pour les lignes accumulées
+        for k = lignesAccu(i):24:lignesAccu(i)+joursMois(i)*24-24 
+            tempMoy(j,n) = table2array(DonnesmteoVarennes(j+k,6));
+            ventMoy(j,n) = table2array(DonnesmteoVarennes(j+k,3));
+            RHMoy(j,n) = table2array(DonnesmteoVarennes(j+k,2));
+            irrMoy(j,n) = table2array(DonnesmteoVarennes(j+k,5));
             n = n+1;
         end
     end
     % Moyenne mensuelle des données horaires
-    meteo{i,2} = mean(tempMoy');
+    param{i,2} = mean(tempMoy'); % Compilation des températures horaires moyennes (degrés C)
+    param{i,3} = mean(ventMoy'); % Compilation des températures horaires moyennes (m/s)
+    param{i,4} = mean(RHMoy'); % Compilation des humidités relative horaires moyennes (%)
+    param{i,5} = mean(irrMoy'); % Compilation des irradiations horaires moyennes (W/m2?)
 end
 
+%% Puissances éoliennes et solaires horaires par mois
+solaireTot = [];
+eolienTot = [];
+for i = 1:12
+    % Énergie solaire produite par heure
+    param{i,6} = energieSolaire(param{i,5},param{i,2});
+    solaireTot(i) = sum(param{i,6});
+    % Énergie éolienne produite par heure
+    param{i,7} = energieEolienne(param{i,3});
+    eolienTot(i) = sum(param{i,7});
+end
+
+solaireAnnuel = sum(solaireTot.*joursMois); %Énergie solaire annuelle
+eolienAnnuel = sum(eolienTot.*joursMois); %Énergie éolienne annuelle
 %% Entrée des paramètres du projet
 
 Cap_i = [2100,1900,3000]; % Capacité du générateur i [MW]
