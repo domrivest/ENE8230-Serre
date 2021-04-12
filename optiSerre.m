@@ -59,7 +59,7 @@ for i = 1:12
     solaireTot(i) = sum(param{i,7});
     param{i,8} = energieEolienne(param{i,3});    % Énergie éolienne produite par heure (kW)
     eolienTot(i) = sum(param{i,8});
-    param{i,9} = [16,16,16,16,16,16,20,22,22,22,22,22,22,22,22,22,22,22,20,16,16,16,16,16]; %Température de la serre
+    param{i,9} = [16,16,16,16,16,16,19,22,22,22,22,22,22,22,22,22,22,22,19,16,16,16,16,16]; %Température de la serre
     param{i,10} = [2.2,2.2,2.2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2.2,2.2,2.2,2.2,2.2,2.2,2.2]; % Charge d'éclairage (kW)
     param{i,11} = chaleurSerre(param{i,5},param{i,2},param{i,8},param{i,10}); % Besoins thermiques de la serre
 end
@@ -77,8 +77,8 @@ eta_d_batt = 0.9; % Efficacité décharge batterie
 
 % Paramètres divers de puissance
 p_fan = 0.1864; % 0,25 hp
-p_deshumi = 0.7457; % 1 hp
-p_humi = 0.7457; % 1 hp
+p_dh = 0.7457; % 1 hp
+%p_humi = 0.7457; % 1 hp
 
 % Paramètres de la serre
 p_pompe = 0.200; % 0.200 kW pour la pompe à eau
@@ -178,7 +178,7 @@ for i = 1:12
     %% Définition des contraintes du projet
     
     % Contraintes sur la puissance externe
-    prob.Constraints.p_1 = p_batt_t + p_eol_t + p_pv_t + p_ext_t == p_clim_t + p_chauf_t + p_lum_t + s_tj(2,:)*p_pompe;
+    prob.Constraints.p_1 = p_batt_t + p_eol_t + p_pv_t + p_ext_t == p_clim_t + p_chauf_t + p_lum_t + s_tj(2,:)*p_pompe +s_tj(3,:)*p_dh + p_fan;
     
     % Contraintes sur le chauffage et la climatisation
     prob.Constraints.chaleur_1 = p_chauf_t <= s_tj(4,:)*p_chauf_max; % Activation du chauffage
