@@ -1,10 +1,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % energieSolaire.m
-% Fonction calculant l'énergie solaire produite par les panneaux (kWh)
+% Fonction calculant l'énergie solaire produite par les panneaux (kW)
 % Inputs : - irrMoy (1x24) (vecteur de l'irraditiation moyenne par heure dans une
 % journée)
 % - tempMoy (1x24) (vecteur de la température moyenne par heure
-% Output : - pvMoy (1x24) (vecteur de l'énergie solaire produite par heure)
+% Output : - pvMoy (1x24) (vecteur de la puissance solaire produite par heure)
 % Auteurs : Dominic Rivest
 % Date de création : 2021-04-08
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -21,7 +21,7 @@ C_T = 0.0045; % Coefficient de température
 eps_pv = 0; % Coefficient de correction
 
 % Initialisation des variables
-pvMoy = []; % Énergie produite par heure (kWh)
+pvMoy = []; % Puissance produite par heure (kW)
 theta_cell = []; % Température du panneau (c)
 for i = 1:length(irrMoy)
     theta_cell = tempMoy(i)+irrMoy(i)/I_stc*eps_pv;
