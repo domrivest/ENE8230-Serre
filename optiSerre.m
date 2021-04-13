@@ -218,7 +218,19 @@ for i = 1:12
     
     % Résolution du problème du mois
     [sol{i},fval{i}] = solve(prob);
+    
+    % Correction pour l'activation du chauffage et de la climatisation
+    for j = 1:96
+        if sol{i}.p_clim_t(j) == 0 % Correction si p_clim est de 0
+           sol{i}.s_tj(5,j) = 0;
+        end
+        if sol{i}.p_chauf_t(j) == 0 % Correction si p_chauf est de 0
+           sol{i}.s_tj(4,j) = 0;
+        end
+    end
 end
+
+
 
 %% Graphiques
 
