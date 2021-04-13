@@ -11,6 +11,7 @@
 function eolMoy = energieEolienne(ventMoy)
 
 % Paramètres de l'éolienne
+N_eol = 1; % Nombre d'éoliennes
 V_c = 2.5; % Vitesse de démarrage (m/s)
 V_r = 12; % Vitesse nominale (m/s)
 P_reol = 3; % Puissance à la vitesse nominale (kW)
@@ -39,4 +40,5 @@ for i = 1:length(ventMoy)
         eolMoy(i) = 3/9.5*ventMoy(i)-0.7895;%P_reol/(V_r-V_c)*ventMoy(i)-P_reol/(V_r-V_c)*2.5;
     end
 end
+eolMoy = eolMoy*N_eol;
 end

@@ -12,7 +12,7 @@
 function pvMoy = energieSolaire(irrMoy, tempMoy)
 
 % Paramètres des panneaux solaires
-N_pv = 1; % Nombre de panneaux
+N_pv = 1; % Nombre de panneaux (1 normal)
 eta_pv = 0.23; % Effiacité des panneaux
 theta_stc = 25; % Température de référence
 P_stc = 1; % Puissance crête aux conditions standards (kW)

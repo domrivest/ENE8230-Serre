@@ -164,6 +164,7 @@ for i = 1:12
     sp_t = optimvar('sp_t',1,96,'LowerBound',0); %Énergie chargée au temps t
     sm_t = optimvar('sm_t',1,96,'LowerBound',0); % Énergie déchargée au temps t
     p_batt_t = optimvar('p_batt_t',1,96); % Puissance fournie au temps t
+
     
     % Variables pour l'humidité
     omega_t = optimvar('omega_t',1,96,'LowerBound',0); % Humidité de la serre (ge/kga)
@@ -178,7 +179,7 @@ for i = 1:12
     %% Définition des contraintes du projet
     
     % Contraintes sur la puissance externe
-    prob.Constraints.p_1 = p_batt_t + p_eol_t + p_pv_t + p_ext_t == p_clim_t + p_chauf_t + p_lum_t + s_tj(2,:)*p_pompe +s_tj(3,:)*p_dh + p_fan;
+    prob.Constraints.p_1 = p_batt_t + p_eol_t + p_pv_t + p_ext_t >= p_clim_t + p_chauf_t + p_lum_t + s_tj(2,:)*p_pompe +s_tj(3,:)*p_dh + p_fan;
     
     % Contraintes sur le chauffage et la climatisation
     prob.Constraints.chaleur_1 = p_chauf_t <= s_tj(4,:)*p_chauf_max; % Activation du chauffage
@@ -192,9 +193,11 @@ for i = 1:12
     % Contraintes sur la batterie
     prob.Constraints.batt_1 = SOC_t <= s_batt; % Capacité batterie
     prob.Constraints.batt_2 = SOC_t(2:end) == SOC_t(1:end-1)+eta_c_batt*sp_t(2:end)-sm_t(2:end)/eta_d_batt;% Suivi de la charge
-    prob.Constraints.batt_3 = SOC_t(1) == 12; % Charge initiale
+    prob.Constraints.batt_3 = SOC_t(1) == s_batt/2; % Charge initiale
     prob.Constraints.batt_4 = SOC_t(end) >= SOC_t(1); % Charge finale egale a la charge initiale
-    prob.Constraints.batt_5 = p_batt_t == (sm_t-sp_t)/tau; % Puissance fournie par la batterie 
+    prob.Constraints.batt_5 = p_batt_t == (sm_t-sp_t)/tau; % Puissance fournie par la batterie
+    prob.Constraints.batt_6 = sm_t(1) == 0; % Dechargement initial nul
+    prob.Constraints.batt_7 = sp_t(1) == 0; % Chargement initial nul 
     
     % Contraintes sur l'humidité
     prob.Constraints.humi_1 = omega_t(1) == (omega_max(1)+omega_min(1))/2; % Humidité initiale
@@ -216,3 +219,76 @@ for i = 1:12
     % Résolution du problème du mois
     [sol{i},fval{i}] = solve(prob);
 end
+
+%% Graphiques
+
+figure()
+chargeTotale = []; % Charge énergétique totale (sans les sources d'énergie)
+couleur = {[0.5,0.5,0.5],[1,0.5,0.3],[0.1,0.5,0.8],[0.5,0.8,0.5],[0.2,0.6,0.2],[0.8,0.2,0.2]};
+energieEcono = []; % Énergie économisée grâce à l'éolienne, au panneau solaire et à la batterie
+marqueur = {'-','--'};
+temps = [0.25:0.25:24];
+for i = 1:12
+    subplot(2,3,1)
+    plot(temps,sol{i}.p_ext_t,marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur{floor((i-1)/2+1)})
+    title('Puissance externe par mois en fonction de l''heure')
+    hold on
+    
+    subplot(2,3,2)
+    plot([1:24],param{i,7},marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur{floor((i-1)/2+1)})
+     title('Puissance solaire par mois en fonction de l''heure')
+    hold on
+    subplot(2,3,3)
+    plot([1:24],param{i,8},marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur{floor((i-1)/2+1)})
+    title('Puissance de l''éolienne par mois en fonction de l''heure')
+    hold on
+    
+    subplot(2,3,4)
+    plot(temps,sol{i}.SOC_t,marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur{floor((i-1)/2+1)})
+    title('Charge de la batterie en fonction de l''heure par mois')
+    hold on
+    
+    chargeTotale(i,:) = sol{i}.p_clim_t + sol{i}.p_chauf_t + p_lum_t + sol{i}.s_tj(2,:)*p_pompe +sol{i}.s_tj(3,:)*p_dh + p_fan;
+    
+    subplot(2,3,5)
+    plot(temps,chargeTotale(i,:),marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur{floor((i-1)/2+1)})
+    title('Charge énergétique en fonction de l''heure par mois')
+    hold on
+    
+   energieEcono(i,:) = [sum(param{i,8}), sum(param{i,7}), sum(sol{i}.sm_t)]; 
+end
+subplot(2,3,1)
+xlabel('Heure')
+ylabel('Puissance externe (kW)')
+legend()
+
+subplot(2,3,2)
+xlabel('Heure')
+ylabel('Puissance solaire (kW)')
+legend()
+
+subplot(2,3,3)
+xlabel('Heure')
+ylabel('Puissance de l"éolienne (kW)')
+legend()
+
+subplot(2,3,4)
+xlabel('Heure')
+ylabel('Charge de la batterie (kWh)')
+legend()
+ylim([0, s_batt])
+
+subplot(2,3,5)
+xlabel('Heure')
+ylabel('Charge énergétique (kW)')
+legend()
+
+ subplot(2,3,6)
+    mois = categorical({'J','F','M','A','M','J','J','A','S','O','N','D'});
+    bar(energieEcono,'stacked')
+    title('Énergie économisée par les éléments en fonction du mois')
+    ylabel('Énergie (kWh)')
+    xlabel('mois')
+    legend('Éolienne','PV','Batterie')
+    set(gca,'xticklabel',mois);
+    hold on
