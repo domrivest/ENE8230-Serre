@@ -304,3 +304,36 @@ legend()
     legend('Éolienne','PV','Batterie')
     set(gca,'xticklabel',mois);
     hold on
+
+figure(2)
+temps = [0.25:0.25:24];
+subplot(2,3,1)
+plot(temps,sol{4}.s_tj(1,:))
+title('État d''activation pour les fênetres pour 1 journée')
+xlabel('Heure')
+ylabel('État d''activation')
+
+subplot(2,3,2)
+plot(temps,sol{4}.s_tj(2,:))
+title('État d''activation pour la pompe pour 1 journée')
+xlabel('Heure')
+ylabel('État d''activation')
+
+subplot(2,3,3)
+plot(temps,sol{4}.s_tj(3,:))
+title('État d''activation pour le déshumidificateur pour 1 journée')
+xlabel('Heure')
+ylabel('État d''activation')
+
+subplot(2,3,4)
+plot(temps,sol{4}.s_tj(4,:))
+title('État d''activation pour le chauffage pour 1 journée')
+xlabel('Heure')
+ylabel('État d''activation')
+
+subplot(2,3,5)
+plot(temps,sol{4}.s_tj(5,:))
+title('État d''activation pour la climitisation pour 1 journée')
+xlabel('Heure')
+ylabel('État d''activation')
+
