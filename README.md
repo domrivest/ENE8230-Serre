@@ -9,4 +9,4 @@ Le fichier "optiSerre.m" contient le code principal d'optimisation.
 Les fichiers suivants sont des fonctions :
 energieSolaire.m : Calcul de la puissance solaire par heure
 energieEolienne.m : Calcul de la puissance éolienne par heure
-energieThermique.m : Calcul des besoins thermiques de la serre par heure
+chaleurSerre.m : Calcul des besoins thermiques de la serre par heure
