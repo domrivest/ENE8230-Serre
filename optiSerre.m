@@ -41,11 +41,11 @@ for i = 1:12
         n = 1;
         %Indexation pour les lignes accumulées
         for k = lignesAccu(i):24:lignesAccu(i)+joursMois(i)*24-24
-            tempMoy(j,n) = table2array(DonnesmteoVarennes(j+k,6));
-            ventMoy(j,n) = table2array(DonnesmteoVarennes(j+k,3));
-            RHMoy(j,n) = table2array(DonnesmteoVarennes(j+k,2));
-            irrMoy(j,n) = table2array(DonnesmteoVarennes(j+k,5));
-            humiAbs(j,n) = table2array(DonnesmteoVarennes(j+k,8));
+            tempMoy(j,n) = table2array(donneesMeteo(j+k,6));
+            ventMoy(j,n) = table2array(donneesMeteo(j+k,3));
+            RHMoy(j,n) = table2array(donneesMeteo(j+k,2));
+            irrMoy(j,n) = table2array(donneesMeteo(j+k,5));
+            humiAbs(j,n) = table2array(donneesMeteo(j+k,8));
             n = n+1;
         end
     end
@@ -110,8 +110,8 @@ W_max_irrig = 9.6; % Taux d'irrigation du système d'eau (g/hm2)
 W_max_dh = 145; % Taux maximal de déshumidification (g/hm2)
 RH_min = 0.50; % Humidité relative min
 RH_max = 0.70; % Humidité relative max
-p_chauf_max = 10 ; % Puissance électrique max du système de chauffage (kW)
-p_clim_max = 10 ; % Puissance électrique max du système de climatisation (kW)
+p_chauf_max = 100 ; % Puissance électrique max du système de chauffage (kW)
+p_clim_max = 100 ; % Puissance électrique max du système de climatisation (kW)
 cop_clim = 2.5; % Coefficient de performance du refroidissement
 cop_chauf = 1.7; % Coefficient de performance du chauffage
 
@@ -236,38 +236,40 @@ end
 
 figure()
 chargeTotale = []; % Charge énergétique totale (sans les sources d'énergie)
-couleur = {[0.5,0.5,0.5],[1,0.5,0.3],[0.1,0.5,0.8],[0.5,0.8,0.5],[0.2,0.6,0.2],[0.8,0.2,0.2]};
+couleur = hsv(12);
 energieEcono = []; % Énergie économisée grâce à l'éolienne, au panneau solaire et à la batterie
-marqueur = {'-','--'};
+marqueur = {'-','-'};
 temps = [0.25:0.25:24];
+irrTot = [];
 for i = 1:12
     subplot(2,3,1)
-    plot(temps,sol{i}.p_ext_t,marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur{floor((i-1)/2+1)})
+    plot(temps,sol{i}.p_ext_t,marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur(i,:),'LineWidth',1.5)
     title('Puissance externe par mois en fonction de l''heure')
     hold on
     
     subplot(2,3,2)
-    plot([1:24],param{i,7},marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur{floor((i-1)/2+1)})
+    plot([1:24],param{i,7},marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur(i,:),'LineWidth',1.5)
      title('Puissance solaire par mois en fonction de l''heure')
     hold on
     subplot(2,3,3)
-    plot([1:24],param{i,8},marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur{floor((i-1)/2+1)})
+    plot([1:24],param{i,8},marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur(i,:),'LineWidth',1.5)
     title('Puissance de l''éolienne par mois en fonction de l''heure')
     hold on
     
     subplot(2,3,4)
-    plot(temps,sol{i}.SOC_t,marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur{floor((i-1)/2+1)})
+    plot(temps,sol{i}.SOC_t,marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur(i,:),'LineWidth',1.5)
     title('Charge de la batterie en fonction de l''heure par mois')
     hold on
     
     chargeTotale(i,:) = sol{i}.p_clim_t + sol{i}.p_chauf_t + p_lum_t + sol{i}.s_tj(2,:)*p_pompe +sol{i}.s_tj(3,:)*p_dh + p_fan;
     
     subplot(2,3,5)
-    plot(temps,chargeTotale(i,:),marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur{floor((i-1)/2+1)})
+    plot(temps,chargeTotale(i,:),marqueur{mod(i,2)+1},'DisplayName',param{i,1}{1},'Color',couleur(i,:),'LineWidth',1.5)
     title('Charge énergétique en fonction de l''heure par mois')
     hold on
     
    energieEcono(i,:) = [sum(param{i,8}), sum(param{i,7}), sum(sol{i}.sm_t)]; 
+   irrTot(i) = sum(param{i,5});
 end
 subplot(2,3,1)
 xlabel('Heure')
@@ -289,6 +291,7 @@ xlabel('Heure')
 ylabel('Charge de la batterie (kWh)')
 legend()
 ylim([0, s_batt])
+colormap(jet(12))
 
 subplot(2,3,5)
 xlabel('Heure')
@@ -304,36 +307,5 @@ legend()
     legend('Éolienne','PV','Batterie')
     set(gca,'xticklabel',mois);
     hold on
-
-figure(2)
-temps = [0.25:0.25:24];
-subplot(2,3,1)
-plot(temps,sol{4}.s_tj(1,:))
-title('État d''activation pour les fênetres pour 1 journée')
-xlabel('Heure')
-ylabel('État d''activation')
-
-subplot(2,3,2)
-plot(temps,sol{4}.s_tj(2,:))
-title('État d''activation pour la pompe pour 1 journée')
-xlabel('Heure')
-ylabel('État d''activation')
-
-subplot(2,3,3)
-plot(temps,sol{4}.s_tj(3,:))
-title('État d''activation pour le déshumidificateur pour 1 journée')
-xlabel('Heure')
-ylabel('État d''activation')
-
-subplot(2,3,4)
-plot(temps,sol{4}.s_tj(4,:))
-title('État d''activation pour le chauffage pour 1 journée')
-xlabel('Heure')
-ylabel('État d''activation')
-
-subplot(2,3,5)
-plot(temps,sol{4}.s_tj(5,:))
-title('État d''activation pour la climitisation pour 1 journée')
-xlabel('Heure')
-ylabel('État d''activation')
-
+    
+ 
