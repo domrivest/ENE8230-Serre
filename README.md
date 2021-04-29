@@ -2,7 +2,7 @@
 
 Projet de l'équipe 5 de ENE8230
 
-Le fichier "donneesMeteo.mat" contient les données (temp, vent, irradiation, etc., RH) du fichier excel "Données météo - Varennes"
+Le fichier "donneesMeteo.mat" contient les données (temp, vent, irradiation, etc., RH) du fichier excel "Données météo - Varennes V3"
 
 Le fichier "optiSerre.m" contient le code principal d'optimisation.
 
